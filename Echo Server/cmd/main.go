@@ -1,7 +1,15 @@
 package main
 
-import "echo"
+import (
+	"echo"
+	"os"
+)
 
 func main() {
-	echo.LocalEcho()
+	args := os.Args
+	if len(args) <= 1 || args[1] == "network" {
+		echo.NetworkEcho()
+	} else {
+		echo.LocalEcho()
+	}
 }
