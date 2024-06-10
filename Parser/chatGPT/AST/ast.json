@@ -1,0 +1,27 @@
+{
+  "Left": {
+    "Value": 3
+  },
+  "Operator": 2,
+  "Right": {
+    "Left": {
+      "Left": {
+        "Value": 5
+      },
+      "Operator": 4,
+      "Right": {
+        "Left": {
+          "Value": 10
+        },
+        "Operator": 3,
+        "Right": {
+          "Value": 4
+        }
+      }
+    },
+    "Operator": 5,
+    "Right": {
+      "Value": 24
+    }
+  }
+}
