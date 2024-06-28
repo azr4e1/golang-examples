@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"bufio"
 	"log"
 	"net"
 	"os"
@@ -8,7 +9,7 @@ import (
 	"syscall"
 )
 
-func LocalEcho() {
+func UDSEcho() {
 	// create a unix domain socket and listen for incoming connections
 	uds := "/tmp/echo.sock"
 	socket, err := net.Listen("unix", uds)
@@ -33,6 +34,7 @@ func LocalEcho() {
 	for {
 		// Accept an incoming connection
 		conn, err := socket.Accept()
+		log.Println("New connection established")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -40,25 +42,29 @@ func LocalEcho() {
 		// Handle the connection in a separate goroutine
 		go func(conn net.Conn) {
 			defer conn.Close()
-			// Create a buffer for incoming data
-			buf := make([]byte, 4096)
-
-			// Read data from the connection
-			n, err := conn.Read(buf)
-			log.Println("Incoming message of length:", n)
-			if err != nil {
-				log.Fatal(err)
-			}
-			// Echo the data back to the connection
-			_, err = conn.Write(buf[:n])
-			if err != nil {
-				log.Fatal(err)
+			for {
+				// Create a buffer for incoming data
+				buf := make([]byte, 4096)
+				n, err := conn.Read(buf)
+				if n == 0 {
+					log.Println("Connection closed")
+					break
+				}
+				log.Println("Incoming message of length:", n)
+				if err != nil {
+					log.Fatal(err)
+				}
+				// Echo the data back to the connection
+				_, err = conn.Write(buf[:n])
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}(conn)
 	}
 }
 
-func NetworkEcho() {
+func TCPEcho() {
 	addr := "localhost:9999"
 	server, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -70,6 +76,7 @@ func NetworkEcho() {
 
 	for {
 		conn, err := server.Accept()
+		log.Println("New connection established")
 		if err != nil {
 			log.Println("Failed to accept conn.", err)
 			continue
@@ -79,17 +86,32 @@ func NetworkEcho() {
 			defer func() {
 				conn.Close()
 			}()
-			buf := make([]byte, 4096)
-			n, err := conn.Read(buf)
-			log.Println("Incoming message of length:", n)
-			if err != nil {
-				log.Fatal(err)
-			}
-			// Echo the data back to the connection
-			_, err = conn.Write(buf[:n])
-			if err != nil {
-				log.Fatal(err)
+			for {
+				buf := make([]byte, 4096)
+				n, err := conn.Read(buf)
+				if n == 0 {
+					log.Println("Connection closed")
+					break
+				}
+				log.Println("Incoming message of length:", n)
+				if err != nil {
+					log.Fatal(err)
+				}
+				// Echo the data back to the connection
+				_, err = conn.Write(buf[:n])
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}(conn)
+	}
+}
+
+func STDIOEcho() {
+	log.Println("Running on stdio")
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		input := scanner.Text()
+		os.Stdout.WriteString(input + "\n")
 	}
 }

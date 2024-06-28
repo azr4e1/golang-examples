@@ -8,8 +8,10 @@ import (
 func main() {
 	args := os.Args
 	if len(args) <= 1 || args[1] == "network" {
-		echo.NetworkEcho()
+		echo.TCPEcho()
+	} else if len(args) <= 1 || args[1] == "stdio" {
+		echo.STDIOEcho()
 	} else {
-		echo.LocalEcho()
+		echo.UDSEcho()
 	}
 }
