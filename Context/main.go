@@ -63,6 +63,8 @@ func main() {
 	}()
 
 	doSomething(ctx)
+
+	fmt.Println("Press Ctrl+C to stop")
 	doSomethingLong(ctxC)
 
 	time.Sleep(1 * time.Second)
