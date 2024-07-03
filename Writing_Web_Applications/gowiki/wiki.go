@@ -121,7 +121,6 @@ func redirectRootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.Println(pages)
 	http.HandleFunc("/", redirectRootHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
