@@ -17,10 +17,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Original:", shouldProduce)
 	stringed := string(base64Bytes)
-	fmt.Println(stringed)
+	fmt.Println("Result  :", stringed)
 
-	fmt.Println("Does it coincide?")
+	fmt.Print("Does it coincide? ")
 	if stringed == shouldProduce {
 		fmt.Println("YES!")
 	} else {
