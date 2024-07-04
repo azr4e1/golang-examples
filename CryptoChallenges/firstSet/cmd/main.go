@@ -27,4 +27,7 @@ func main() {
 	} else {
 		fmt.Println("NO...")
 	}
+	// b := byte(0b10101111)
+	// hx := fset.ToHex([]byte{b})
+	// fmt.Println(string(hx))
 }

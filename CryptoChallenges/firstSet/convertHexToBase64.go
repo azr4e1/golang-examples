@@ -12,7 +12,7 @@ func encodeHex(b byte) (byte, error) {
 	if ib := int(b); ib < 10 {
 		out = byte(int('0') + ib)
 	} else if int(b) < 16 {
-		out = byte(int('a') + ib)
+		out = byte(int('a') + ib - 10)
 	} else {
 		return 0, errors.New("invalid byte")
 	}
@@ -22,10 +22,10 @@ func encodeHex(b byte) (byte, error) {
 
 func decodeHex(b byte) (byte, error) {
 	var out byte
-	if ib := int(b); ib >= int('0') && ib <= int('9') {
-		out = byte(ib - int('0'))
-	} else if ib >= int('a') && ib <= int('z') {
-		out = byte(ib - int('a'))
+	if ib := int(b); ib >= '0' && ib <= '9' {
+		out = byte(ib - '0')
+	} else if ib >= 'a' && ib <= 'f' {
+		out = byte(ib - 'a' + NumeralLength)
 	} else {
 		return 0, errors.New("invalid hex")
 	}
@@ -94,64 +94,79 @@ func encodeBase64(b byte) (byte, error) {
 	return out, nil
 }
 
-func buildExtractor(n int) byte {
-	if n <= 0 {
-		return 0
-	}
-	var b byte = 1
-	for i := 0; i < n; i++ {
-		b = (b << 1) + 1
-	}
-	b = b << byte(8-n)
-
-	return b
-}
-
-func assembleBase64Byte(remainder, b byte) (byte, byte) {
-	if b == 0 {
-		return remainder, 0
-	}
-
-	lengthB1 := byteLen(remainder)
-	remainingLen := 6 - lengthB1
-	firstB := remainder << byte(remainingLen)
-	extractor := buildExtractor(remainingLen)
-	secondB := (b & extractor) >> byte(8-remainingLen)
-
-	remainingBits := b & (extractor ^ buildExtractor(8))
-	final := firstB + secondB
-
-	return final, remainingBits
-}
-
-func ToBase64(input []byte) ([]byte, error) {
-	if len(input) == 0 {
-		return input, nil
-	}
+func encodeBytesTripletsToBase64(input []byte) ([]byte, error) {
 	out := []byte{}
-	remainder := byte(0)
-	var b1 byte
-	for _, b := range input {
-		b1, remainder = assembleBase64Byte(remainder, b)
-		encodedByte, err := encodeBase64(b1)
+	switch len(input) {
+	case 0:
+		return input, nil
+	case 1:
+		b := input[0]
+		first, err := encodeBase64(b >> 2)
 		if err != nil {
-			return out, err
+			return nil, err
 		}
-		out = append(out, encodedByte)
+		second, err := encodeBase64(b & 0b00000011)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, first, second)
+	case 2:
+		b1, b2 := input[0], input[1]
+		first, err := encodeBase64(b1 >> 2)
+		if err != nil {
+			return nil, err
+		}
+		second, err := encodeBase64(((b1 & 0b00000011) << 4) + (b2 >> 4))
+		if err != nil {
+			return nil, err
+		}
+		third, err := encodeBase64(b2 & 0b00001111)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, first, second, third)
+	case 3:
+		b1, b2, b3 := input[0], input[1], input[2]
+		first, err := encodeBase64(b1 >> 2)
+		if err != nil {
+			return nil, err
+		}
+		second, err := encodeBase64(((b1 & 0b00000011) << 4) + (b2 >> 4))
+		if err != nil {
+			return nil, err
+		}
+		third, err := encodeBase64((b2&0b00001111)<<2 + (b3 >> 6))
+		if err != nil {
+			return nil, err
+		}
+		fourth, err := encodeBase64(b3 & 0b00111111)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, first, second, third, fourth)
+	default:
+		return nil, errors.New("Too many bytes, max three")
 	}
+
 	return out, nil
 }
 
-func FromBase64(b64 []byte) []byte {
-	return nil
-}
-
-func byteLen(b byte) int {
-	length := 0
-	for b != 0b00000000 {
-		b = b >> 1
-		length++
+func ToBase64(input []byte) ([]byte, error) {
+	var toEncode []byte
+	out := []byte{}
+	for len(input) > 2 {
+		toEncode, input = input[:3], input[3:]
+		encodedBytes, err := encodeBytesTripletsToBase64(toEncode)
+		if err != nil {
+			return out, err
+		}
+		out = append(out, encodedBytes...)
 	}
+	encodedBytes, err := encodeBytesTripletsToBase64(input)
+	if err != nil {
+		return out, err
+	}
+	out = append(out, encodedBytes...)
 
-	return length
+	return out, nil
 }
