@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	fset "cryptochallenges/firstSet"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -59,7 +61,31 @@ func main() {
 		panic(err)
 	}
 
-	key := fset.FrequencyXORCypher(hx)
-	fmt.Println("Key: ", string(key[0]))
-	fmt.Println("Decrypted message: ", string(fset.XOR(hx, key)))
+	decrypted, key := fset.FrequencyXORCypher(hx)
+	if key != nil {
+		fmt.Println("Key: ", string(key[0]))
+		fmt.Println("Decrypted message: ", string(decrypted))
+	}
+
+	fmt.Println("\nChallenge 4")
+	f, err := os.Open("../data/4.txt")
+	if err != nil {
+		panic(err)
+	}
+	scanner := bufio.NewScanner(f)
+	lineNr := 0
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		hx, err = fset.FromHex(line)
+		if err != nil {
+			panic(err)
+		}
+		decrypted, key = fset.FrequencyXORCypher(hx)
+		if key != nil {
+			fmt.Println(lineNr)
+			fmt.Println("Key: ", string(key[0]))
+			fmt.Println("Decrypted message: ", string(decrypted))
+			break
+		}
+	}
 }

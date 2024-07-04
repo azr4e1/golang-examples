@@ -7,7 +7,20 @@ import (
 
 const Precision = 0.05
 
-var mostFrequentLetters = []byte{'e', 'a', 'i', 'o', ' '}
+var mostFrequentLetters = []byte{'e', 'a', 'i', 'o', 't', 'n', 's', 'l', 'c', ' '}
+
+var mostFrequentLetters = map[byte]float32{
+	'e': 0.111607,
+	'a': 0.08496,
+	'r': 0.075809,
+	'i': 0.075448,
+	'o': 0.071635,
+	't': 0.069509,
+	'n': 0.066544,
+	's': 0.057351,
+	'l': 0.054893,
+	'c': 0.045388,
+}
 
 func XOR(input1, input2 []byte) []byte {
 	maxLen := max(len(input1), len(input2))
@@ -63,22 +76,24 @@ func Top5Chars(freqs map[byte]float32) []byte {
 	return chars[:sliceLen]
 }
 
-func FrequencyXORCypher(message []byte) []byte {
+func IsEnglish(input []byte) bool {
+	for _, c := range mostFrequentLetters {
+		if !slices.Contains(input, c) {
+			return false
+		}
+	}
+	return true
+}
+
+func FrequencyXORCypher(message []byte) ([]byte, []byte) {
 	for char := 0; char < 128; char++ {
 		key := bytes.Repeat([]byte{byte(char)}, len(message))
-		decrypted := bytes.ToLower(XOR(message, key))
-		isContained := true
-		for _, c := range mostFrequentLetters {
-			if !slices.Contains(decrypted, c) {
-				isContained = false
-				break
-			}
-		}
+		decrypted := XOR(message, key)
 
-		if isContained {
-			return key
+		if IsEnglish(bytes.ToLower(decrypted)) {
+			return decrypted, key
 		}
 	}
 
-	return nil
+	return message, nil
 }
