@@ -5,21 +5,22 @@ import (
 	"slices"
 )
 
-const Precision = 0.05
+const Precision = 0.8
 
-var mostFrequentLetters = []byte{'e', 'a', 'i', 'o', 't', 'n', 's', 'l', 'c', ' '}
+// var mostFrequentLetters = []byte{'e', 'a', 'i', 'o', ' '}
 
 var mostFrequentLetters = map[byte]float32{
 	'e': 0.111607,
+	' ': 0.5,
 	'a': 0.08496,
-	'r': 0.075809,
-	'i': 0.075448,
-	'o': 0.071635,
-	't': 0.069509,
-	'n': 0.066544,
-	's': 0.057351,
-	'l': 0.054893,
-	'c': 0.045388,
+	// 'r': 0.075809,
+	// 'i': 0.075448,
+	// 'o': 0.071635,
+	// 't': 0.069509,
+	// 'n': 0.066544,
+	// 's': 0.057351,
+	// 'l': 0.054893,
+	// 'c': 0.045388,
 }
 
 func XOR(input1, input2 []byte) []byte {
@@ -71,18 +72,30 @@ func Top5Chars(freqs map[byte]float32) []byte {
 			return 1
 		}
 	})
-	sliceLen := min(len(chars), 5)
+	top5 := []byte{chars[0]}
+	for i := 1; i < len(chars); i++ {
+		if freqs[top5[i-1]] == freqs[chars[i-1]] || len(top5) < 5 {
+			top5 = append(top5, chars[i])
+		}
+	}
 
-	return chars[:sliceLen]
+	return top5
 }
 
-func IsEnglish(input []byte) bool {
-	for _, c := range mostFrequentLetters {
-		if !slices.Contains(input, c) {
+func hasSimilarFreq(freqs map[byte]float32) bool {
+	for b, f := range mostFrequentLetters {
+		val := freqs[b]
+		diff := abs((val - f) / f)
+		if diff > Precision {
 			return false
 		}
 	}
 	return true
+}
+
+func IsEnglish(message []byte) bool {
+	freqs := GetFrequency(message)
+	return hasSimilarFreq(freqs)
 }
 
 func FrequencyXORCypher(message []byte) ([]byte, []byte) {
@@ -96,4 +109,11 @@ func FrequencyXORCypher(message []byte) ([]byte, []byte) {
 	}
 
 	return message, nil
+}
+
+func abs[N int | float32](x N) N {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

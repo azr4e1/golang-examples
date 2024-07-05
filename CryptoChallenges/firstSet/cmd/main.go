@@ -82,10 +82,10 @@ func main() {
 		}
 		decrypted, key = fset.FrequencyXORCypher(hx)
 		if key != nil {
-			fmt.Println(lineNr)
 			fmt.Println("Key: ", string(key[0]))
 			fmt.Println("Decrypted message: ", string(decrypted))
 			break
 		}
+		lineNr++
 	}
 }
