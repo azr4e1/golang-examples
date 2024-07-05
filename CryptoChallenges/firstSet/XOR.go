@@ -111,6 +111,19 @@ func FrequencyXORCypher(message []byte) ([]byte, []byte) {
 	return message, nil
 }
 
+func RepeatingKeyXOREncrypt(key []byte, message []byte) []byte {
+	if len(message)*len(key) == 0 {
+		return message
+	}
+	out := []byte{}
+	for i, b := range message {
+		bKey := key[i%len(key)]
+		out = append(out, b^bKey)
+	}
+
+	return out
+}
+
 func abs[N int | float32](x N) N {
 	if x < 0 {
 		return -x
