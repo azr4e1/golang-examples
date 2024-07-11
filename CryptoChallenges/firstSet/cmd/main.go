@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	fset "cryptochallenges/firstSet"
 	"fmt"
+	"io"
 	"os"
+	"slices"
 )
 
 func main() {
@@ -61,14 +64,16 @@ func main() {
 		panic(err)
 	}
 
-	decrypted, key := fset.FrequencyXORCypher(hx)
-	if key != nil {
-		fmt.Println("Key: ", string(key[0]))
+	key := fset.FrequencyXORCypher(hx)
+	if key != 0 {
+		decrypted := fset.XOR(hx, bytes.Repeat([]byte{key}, len(hx)))
+		fmt.Println("Key: ", string(key))
 		fmt.Println("Decrypted message: ", string(decrypted))
 	}
 
 	fmt.Println("\nChallenge 4")
 	f, err := os.Open("../data/4.txt")
+	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -80,9 +85,10 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		decrypted, key = fset.FrequencyXORCypher(hx)
-		if key != nil {
-			fmt.Println("Key: ", string(key[0]))
+		key = fset.FrequencyXORCypher(hx)
+		if key != 0 {
+			decrypted := fset.XOR(hx, bytes.Repeat([]byte{key}, len(hx)))
+			fmt.Println("Key: ", string(key))
 			fmt.Println("Decrypted message: ", string(decrypted))
 			break
 		}
@@ -101,8 +107,8 @@ func main() {
 	toEncrypt := `Burning 'em, if you ain't quick and nimble
 I go crazy when I hear a cymbal`
 	expected = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
-	key = []byte("ICE")
-	encrypted := fset.RepeatingKeyXOREncrypt(key, []byte(toEncrypt))
+	keyRept := []byte("ICE")
+	encrypted := fset.RepeatingKeyXOREncrypt(keyRept, []byte(toEncrypt))
 
 	hexedResult = fset.ToHex(encrypted)
 	fmt.Println("Result:", string(hexedResult))
@@ -112,4 +118,50 @@ I go crazy when I hear a cymbal`
 	} else {
 		fmt.Println("NO...")
 	}
+
+	fmt.Println("\nChallenge 6")
+	f, err = os.Open("../data/6.txt")
+	defer f.Close()
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+	dataL := bytes.Split(data, []byte{'\n'})
+	encrypted = []byte{}
+	for _, line := range dataL {
+		b64, err := fset.FromBase64(line)
+		if err != nil {
+			panic(err)
+		}
+		encrypted = append(encrypted, b64...)
+	}
+	keyLengths := fset.GetKeyLengths(encrypted)
+	lengths := []int{}
+	for k := range keyLengths {
+		lengths = append(lengths, k)
+	}
+	slices.SortFunc[[]int, int](lengths, func(a, b int) int {
+		if keyLengths[a] < keyLengths[b] {
+			return -1
+		}
+		if keyLengths[a] > keyLengths[b] {
+			return 1
+		}
+		return 0
+	})
+	topLengths := lengths[:5]
+	blocks := fset.GetBlocks(encrypted, topLengths[2])
+	fmt.Println(len(blocks))
+	keys := []byte{}
+	for _, block := range blocks {
+		key := fset.FrequencyXORCypher(block)
+		keys = append(keys, key)
+	}
+	fmt.Println(string(keys))
+	decrypted := fset.RepeatingKeyXOREncrypt(keys, encrypted)
+	fmt.Println(string(decrypted))
 }

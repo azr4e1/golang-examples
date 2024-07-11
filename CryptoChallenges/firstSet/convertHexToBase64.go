@@ -2,6 +2,7 @@ package firstset
 
 import (
 	"errors"
+	"fmt"
 )
 
 const AlphabetLength = 26
@@ -28,7 +29,7 @@ func decodeHex(b byte) (byte, error) {
 	} else if ib >= 'a' && ib <= 'f' {
 		out = byte(ib - 'a' + NumeralLength)
 	} else {
-		return 0, errors.New("invalid hex")
+		return 0, fmt.Errorf("invalid hex: %s", string(b))
 	}
 
 	return out, nil
@@ -107,8 +108,10 @@ func decodeBase64(b byte) (byte, error) {
 		out = byte(Base64Max - 2)
 	} else if b == '/' {
 		out = byte(Base64Max - 1)
+	} else if b == '=' {
+		out = 0
 	} else {
-		return 0, errors.New("invalid base64 symbol")
+		return 0, fmt.Errorf("invalid base64 symbol: %s", string(b))
 	}
 
 	return out, nil
