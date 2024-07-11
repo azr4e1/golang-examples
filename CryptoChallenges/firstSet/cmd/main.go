@@ -144,7 +144,7 @@ I go crazy when I hear a cymbal`
 	for k := range keyLengths {
 		lengths = append(lengths, k)
 	}
-	slices.SortFunc[[]int, int](lengths, func(a, b int) int {
+	slices.SortFunc(lengths, func(a, b int) int {
 		if keyLengths[a] < keyLengths[b] {
 			return -1
 		}
@@ -162,6 +162,6 @@ I go crazy when I hear a cymbal`
 		keys = append(keys, key)
 	}
 	fmt.Println(string(keys))
-	decrypted := fset.RepeatingKeyXOREncrypt(keys, encrypted)
-	fmt.Println(string(decrypted))
+	// decrypted := fset.RepeatingKeyXOREncrypt(keys, encrypted)
+	// fmt.Println(string(decrypted))
 }

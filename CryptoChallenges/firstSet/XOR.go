@@ -73,7 +73,9 @@ func GetFrequency(message []byte) map[byte]float32 {
 func getSimilarity(freqs map[byte]float32) float32 {
 	var totalRatio float32 = 1
 	count := 0
+	length := 0
 	for b, f := range freqs {
+		length++
 		// val := freqs[b]
 		val, ok := mostFrequentLetters[b]
 		if !ok {
@@ -83,7 +85,7 @@ func getSimilarity(freqs map[byte]float32) float32 {
 		ratio := f / val
 		totalRatio *= ratio
 	}
-	if count < 14 {
+	if count < min(15, length) {
 		return float32(math.Inf(1))
 	}
 	return abs(float32(1) - totalRatio)
