@@ -1,3 +1,7 @@
+// expr    := term (('+' | '-') term)*
+// term    := factor (('*' | '/') factor)*
+// factor  := INTEGER | '(' expr ')'
+
 package main
 
 import (

@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	fset "cryptochallenges/firstSet"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -69,6 +71,7 @@ func main() {
 
 	fmt.Println("\nChallenge 4")
 	f, err := os.Open("../data/4.txt")
+	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -112,4 +115,30 @@ I go crazy when I hear a cymbal`
 	} else {
 		fmt.Println("NO...")
 	}
+
+	fmt.Println("\nChallenge 6")
+	f, err = os.Open("../data/6.txt")
+	defer f.Close()
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+	dataNl := bytes.Split(data, []byte{'\n'})
+	encrypted = []byte{}
+	for _, line := range dataNl {
+		encryptedLine, err := fset.FromBase64(line)
+		if err != nil {
+			panic(err)
+		}
+		encrypted = append(encrypted, encryptedLine...)
+	}
+	top5KeySizes := fset.FindTop5KeySize(encrypted)
+	// fmt.Println(top5KeySizes)
+	blocks := fset.GetBlocks(encrypted, top5KeySizes[0])
+	keys := fset.GetKey(blocks)
+	fmt.Println(keys)
 }
