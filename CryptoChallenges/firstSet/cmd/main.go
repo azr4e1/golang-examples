@@ -154,14 +154,13 @@ I go crazy when I hear a cymbal`
 		return 0
 	})
 	topLengths := lengths[:5]
-	blocks := fset.GetBlocks(encrypted, topLengths[2])
-	fmt.Println(len(blocks))
+	blocks := fset.GetBlocks(encrypted, topLengths[4])
+	fmt.Println(topLengths)
 	keys := []byte{}
 	for _, block := range blocks {
 		key := fset.FrequencyXORCypher(block)
 		keys = append(keys, key)
 	}
-	fmt.Println(string(keys))
-	// decrypted := fset.RepeatingKeyXOREncrypt(keys, encrypted)
-	// fmt.Println(string(decrypted))
+	fmt.Println(keys)
+	fmt.Println(string(fset.RepeatingKeyXOREncrypt([]byte{keys[0]}, blocks[0])))
 }

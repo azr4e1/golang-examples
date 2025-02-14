@@ -75,8 +75,12 @@ func getSimilarity(freqs map[byte]float32) float32 {
 	count := 0
 	length := 0
 	for b, f := range freqs {
+		// if b < 32 {
+		// 	if b != '\t' && b != '\n' {
+		// 		return float32(math.Inf(1))
+		// 	}
+		// }
 		length++
-		// val := freqs[b]
 		val, ok := mostFrequentLetters[b]
 		if !ok {
 			continue
@@ -85,7 +89,7 @@ func getSimilarity(freqs map[byte]float32) float32 {
 		ratio := f / val
 		totalRatio *= ratio
 	}
-	if count < min(15, length) {
+	if count < min(14, length) {
 		return float32(math.Inf(1))
 	}
 	return abs(float32(1) - totalRatio)
@@ -94,11 +98,18 @@ func getSimilarity(freqs map[byte]float32) float32 {
 func FrequencyXORCypher(message []byte) byte {
 	var mostSimilar byte
 	var mostSimilarVal float32 = float32(math.Inf(1))
-	for key := 0; key < 128; key++ {
+	for key := 0; key < 256; key++ {
 		fullKey := bytes.Repeat([]byte{byte(key)}, len(message))
 		decrypted := XOR(message, fullKey)
 
 		freq := GetFrequency(decrypted)
+		letters := []byte{}
+		for k := range freq {
+			if k < 32 {
+				letters = append(letters, k)
+			}
+		}
+		// fmt.Println(string(key), ":", fmt.Sprintf("%d unprintable characters", len(letters)))
 		similarity := getSimilarity(freq)
 		// fmt.Println(string(byte(key)), similarity)
 		if similarity < mostSimilarVal {
