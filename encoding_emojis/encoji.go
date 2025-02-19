@@ -48,7 +48,7 @@ func (s smuggler) DecodeText(target string) (string, error) {
 	if len(target) == 0 {
 		return "", errors.New("target cannot be empty")
 	}
-	return decode(target), nil
+	return strings.TrimSpace(decode(target)), nil
 }
 
 func (s smuggler) Run() error {
@@ -140,6 +140,21 @@ func WithClearText(text string) option {
 	}
 }
 
+func WithClearFile(file string) option {
+	return func(s *smuggler) error {
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+		text, err := io.ReadAll(f)
+		if err != nil {
+			return err
+		}
+		s.clearText = string(text)
+		return nil
+	}
+}
+
 func WithEncodeFlag(f bool) option {
 	return func(s *smuggler) error {
 		s.encode = f
@@ -155,10 +170,11 @@ func Main(stdin, stdout, stderr io.ReadWriter) int {
 		flag.PrintDefaults()
 	}
 	encodeMode := flag.String("encode", "", "smuggle data within provided text")
+	encodeFile := flag.String("encodefile", "", "smuggle data from file within provided text")
 	decodeMode := flag.Bool("decode", false, "decode smuggled data")
 	flag.Parse()
 
-	if !(*decodeMode) && *encodeMode == "" {
+	if !(*decodeMode) && *encodeMode == "" && *encodeFile == "" {
 		flag.Usage()
 		return MissingInputError
 	}
@@ -173,9 +189,18 @@ func Main(stdin, stdout, stderr io.ReadWriter) int {
 		input = bytes.NewBuffer([]byte(arg[0]))
 	}
 
-	s, _ := NewSmuggler(WithInput(input), WithOutput(stdout), WithError(stderr), WithEncodeFlag(!(*decodeMode)), WithClearText(*encodeMode))
+	var encodeOption = WithClearText(*encodeMode)
+	if *encodeMode == "" && *encodeFile != "" {
+		encodeOption = WithClearFile(*encodeFile)
+	}
 
-	err := s.Run()
+	s, err := NewSmuggler(WithInput(input), WithOutput(stdout), WithError(stderr), WithEncodeFlag(!(*decodeMode)), encodeOption)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return ExecutionError
+	}
+
+	err = s.Run()
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return ExecutionError
