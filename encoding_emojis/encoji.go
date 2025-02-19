@@ -164,7 +164,7 @@ func WithEncodeFlag(f bool) option {
 
 func Main(stdin, stdout, stderr io.ReadWriter) int {
 	flag.Usage = func() {
-		fmt.Fprintf(stderr, "Usage: %s [-encode | -decode] [stdin]\n", os.Args[0])
+		fmt.Fprintf(stderr, "Usage: %s [-encode string | -encodefile filepath | -decode] [stdin]\n", os.Args[0])
 		fmt.Fprintln(stderr, "Encode/decode text using unicode variation selectors")
 		fmt.Fprintln(stderr, "Flags:")
 		flag.PrintDefaults()
